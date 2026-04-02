@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Wars</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0e0e0f;
+    --panel:    #1a1a1c;
+    --metal:    #252528;
+    --border:   #3a3a3e;
+    --orange:   #ff6b00;
+    --orange2:  #ff9a3c;
+    --yellow:   #ffd166;
+    --dim:      #888890;
+    --text:     #e8e8ec;
+    --green:    #39d353;
+    --red:      #ff4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID FLOOR BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,107,0,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,0,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,.15) 2px,
+      rgba(0,0,0,.15) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo-tag {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: .8;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 10vw, 96px);
+    line-height: .9;
+    letter-spacing: 4px;
+    color: var(--text);
+    text-shadow: 0 0 40px rgba(255,107,0,.25);
+  }
+
+  h1 span {
+    color: var(--orange);
+  }
+
+  .subtitle {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* ── CONTROL PANEL ── */
+  .control-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--orange);
+    padding: 28px 32px;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .control-panel::before {
+    content: 'CONTROL PANEL';
+    position: absolute;
+    top: -11px;
+    left: 20px;
+    background: var(--panel);
+    padding: 0 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--orange);
+    letter-spacing: 3px;
+  }
+
+  .panel-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .panel-label {
+    font-size: 13px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+
+
+  /* ── COUNT SELECTOR ── */
+  .count-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .count-btn {
+    width: 44px;
+    height: 44px;
+    background: var(--metal);
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all .15s;
+    position: relative;
+  }
+
+  .count-btn:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+
+  .count-btn.active {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #000;
+    box-shadow: 0 0 16px rgba(255,107,0,.5);
+  }
+
+  /* ── OPEN BUTTON ── */
+  #openBtn {
+    display: block;
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--orange);
+    border: none;
+    color: #000;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all .15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #openBtn:disabled {
+    background: var(--metal);
+    color: var(--dim);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  #openBtn:not(:disabled):hover {
+    background: var(--orange2);
+    box-shadow: 0 0 30px rgba(255,107,0,.6);
+    transform: translateY(-1px);
+  }
+
+  #openBtn:not(:disabled):active {
+    transform: translateY(0);
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 1px;
+    margin-top: 10px;
+    height: 16px;
+  }
+
+  .status-bar.ok   { color: var(--green); }
+  .status-bar.err  { color: var(--red); }
+  .status-bar.warn { color: var(--yellow); }
+
+  /* ── LOCKER ANIMATION STAGE ── */
+  #lockerStage {
+    display: none;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+    margin: 40px 0 32px;
+    height: 180px;
+  }
+
+  #lockerStage.visible {
+    display: flex;
+  }
+
+  .locker-unit {
+    width: 70px;
+    height: 160px;
+    background: var(--metal);
+    border: 2px solid var(--border);
+    position: relative;
+    flex-shrink: 0;
+    transform-origin: bottom center;
+  }
+
+  /* stripes */
+  .locker-unit::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--orange) 0, var(--orange) 4px,
+      transparent 4px, transparent 8px
+    );
+  }
+
+  /* door panel lines */
+  .locker-unit::after {
+    content: '';
+    position: absolute;
+    inset: 14px 6px 6px;
+    border: 1px solid var(--border);
+  }
+
+  .locker-handle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 24px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background .3s;
+  }
+
+  /* number plate */
+  .locker-num {
+    position: absolute;
+    bottom: 10px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  /* open door = rotate on hinge */
+  .locker-door {
+    position: absolute;
+    inset: 0;
+    background: var(--metal);
+    border: 2px solid var(--border);
+    transform-origin: left center;
+    transition: transform .7s cubic-bezier(.4,0,.2,1);
+    z-index: 2;
+  }
+
+  .locker-door.open {
+    transform: perspective(300px) rotateY(-110deg);
+    border-color: var(--orange);
+  }
+
+  .locker-door::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--orange) 0, var(--orange) 4px,
+      transparent 4px, transparent 8px
+    );
+  }
+
+  .locker-door::after {
+    content: '';
+    position: absolute;
+    inset: 14px 6px 6px;
+    border: 1px solid var(--border);
+  }
+
+  .door-handle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 24px;
+    background: var(--orange);
+    border-radius: 2px;
+  }
+
+  /* glow inside open locker */
+  .locker-inner-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(255,107,0,.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity .5s .4s;
+  }
+
+  .locker-unit.open .locker-inner-glow {
+    opacity: 1;
+  }
+
+  /* ── RESULTS ── */
+  #results {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .deck-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--orange);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .5s, transform .5s;
+  }
+
+  .deck-card.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .deck-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+  }
+
+  .deck-card-header:hover {
+    background: rgba(255,107,0,.05);
+  }
+
+  .deck-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .deck-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--orange);
+    border: 1px solid var(--orange);
+    padding: 2px 8px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+
+  .deck-toggle {
+    font-size: 18px;
+    color: var(--dim);
+    transition: transform .3s;
+    flex-shrink: 0;
+  }
+
+  .deck-card.expanded .deck-toggle {
+    transform: rotate(180deg);
+  }
+
+  .deck-body {
+    display: none;
+    padding: 20px;
+  }
+
+  .deck-card.expanded .deck-body {
+    display: block;
+  }
+
+  .deck-url {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    word-break: break-all;
+    margin-bottom: 16px;
+  }
+
+  .deck-url a {
+    color: var(--orange);
+    text-decoration: none;
+  }
+
+  .deck-url a:hover {
+    text-decoration: underline;
+  }
+
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--orange);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 16px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label:first-child {
+    margin-top: 0;
+  }
+
+  .card-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 4px 16px;
+  }
+
+  .card-entry {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 600;
+    padding: 3px 0;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .card-qty {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    min-width: 20px;
+  }
+
+  .loading-spinner {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+    padding: 8px 0;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .ydke-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    background: rgba(255,107,0,.1);
+    color: var(--orange);
+    padding: 1px 5px;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--dim);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: .4;
+  }
+
+  .empty-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  /* ── CORNER DECORATION ── */
+  .corner-deco {
+    position: fixed;
+    top: 0; right: 0;
+    width: 120px; height: 120px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .corner-deco::before,
+  .corner-deco::after {
+    content: '';
+    position: absolute;
+    background: var(--orange);
+    opacity: .07;
+  }
+
+  .corner-deco::before {
+    top: 0; right: 0;
+    width: 100%; height: 3px;
+  }
+
+  .corner-deco::after {
+    top: 0; right: 0;
+    width: 3px; height: 100%;
+  }
+
+  /* ── INFO BUTTON & MODAL ── */
+  .info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--orange);
+    background: transparent;
+    color: var(--orange);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    vertical-align: middle;
+    margin-left: 8px;
+    position: relative;
+    top: -2px;
+    transition: background .15s, color .15s;
+    line-height: 1;
+  }
+
+  .info-btn:hover {
+    background: var(--orange);
+    color: #000;
+  }
+
+  .info-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .info-overlay.open {
+    display: flex;
+  }
+
+  .info-modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--orange);
+    max-width: 500px;
+    width: 100%;
+    padding: 32px;
+    position: relative;
+    animation: modalIn .25s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .info-modal-close {
+    position: absolute;
+    top: 14px; right: 16px;
+    background: none;
+    border: none;
+    color: var(--dim);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color .15s;
+  }
+
+  .info-modal-close:hover { color: var(--text); }
+
+  .info-modal-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--orange);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .info-modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .info-modal-body p {
+    font-size: 15px;
+    color: var(--dim);
+    line-height: 1.6;
+    margin-bottom: 12px;
+    font-weight: 400;
+  }
+
+  .info-modal-body strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .info-rule-box {
+    background: var(--metal);
+    border-left: 3px solid var(--orange);
+    padding: 14px 16px;
+    margin: 16px 0;
+  }
+
+  .info-rule-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--orange);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .info-rule-box p {
+    margin-bottom: 0 !important;
+  }
+
+  .info-modal-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    text-decoration: none;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255,107,0,.3);
+    padding-bottom: 2px;
+    transition: border-color .15s;
+  }
+
+  .info-modal-link:hover {
+    border-color: var(--orange);
+  }
+
+</style>
+</head>
+<body>
+
+<div class="corner-deco"></div>
+
+<div class="wrapper">
+
+  <header>
+    <h1><span>STORAGE</span><br>WARS</h1>
+    <p class="subtitle">Yu-Gi-Oh · Jumpstart-like Format
+      <button class="info-btn" id="infoBtn" title="What is Jumpstart?">?</button>
+    </p>
+  </header>
+
+  <!-- INFO MODAL -->
+  <div id="infoOverlay" class="info-overlay" onclick="closeInfo()">
+    <div class="info-modal" onclick="event.stopPropagation()">
+      <button class="info-modal-close" onclick="closeInfo()">✕</button>
+      <div class="info-modal-tag">// FORMAT BRIEFING</div>
+      <h2 class="info-modal-title">What is Jumpstart?</h2>
+      <div class="info-modal-body">
+        <p>Jumpstart is a Magic: The Gathering format where players grab <strong>two themed 20-card booster packs</strong>, shuffle them together, and instantly have a ready-to-play 40-card deck — no deckbuilding required.</p>
+        <p>The idea is simple: each pack is built around a single theme (like "Goblins", "Angels", or "Pirates"). Mashing two themes together creates unexpected synergies and a unique game every time.</p>
+        <div class="info-rule-box">
+          <div class="info-rule-label">// THIS FORMAT</div>
+          <p>Instead of booster packs, each "locker" in Storage Wars holds a pre-built themed deck. Roll randomly to combine <strong>2, 3, or 4</strong> of them — shuffle together and duel. Skip the prep, start the game.</p>
+        </div>
+        <a href="https://mtg.fandom.com/wiki/Jumpstart" target="_blank" rel="noopener" class="info-modal-link">Read more on MTG Wiki ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-panel">
+    <div class="panel-row">
+      <span class="panel-label">Lockers.txt</span>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim)" id="fileLabel">// LOADING...</div>
+    </div>
+
+    <div class="panel-row" style="margin-top: 16px;">
+      <span class="panel-label">Lockers to Open</span>
+      <div class="count-group">
+        <button class="count-btn" data-val="2">2</button>
+        <button class="count-btn" data-val="3">3</button>
+        <button class="count-btn" data-val="4">4</button>
+      </div>
+    </div>
+
+    <button id="openBtn" disabled>⚡ OPEN LOCKERS</button>
+    <div class="status-bar" id="statusBar">// LOAD A FILE TO BEGIN</div>
+  </div>
+
+  <!-- LOCKER ANIMATION -->
+  <div id="lockerStage"></div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🔒</div>
+      <div class="empty-text">// AWAITING AUTHORIZATION</div>
+    </div>
+  </div>
+
+
+  <!-- FOOTER -->
+  <footer style="margin-top: 60px; text-align: center;">
+    <div style="font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--dim); letter-spacing:3px; margin-bottom:14px;">// EXTERNAL LINK</div>
+    <a href="https://montetribal.github.io/yugiohfusionformat/" target="_blank" rel="noopener" style="display:inline-block;padding:14px 36px;border:1px solid var(--border);color:var(--dim);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;text-decoration:none;transition:all .2s;"
+    onmouseover="this.style.borderColor='var(--orange)';this.style.color='var(--orange)';this.style.boxShadow='0 0 20px rgba(255,107,0,.3)'"
+    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)';this.style.boxShadow='none'"
+    >⚔ YUGIOH FUSION FORMAT</a>
+  </footer>
+
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let entries = [];       // [{name, url}]
+let chosenCount = 2;
+let fileLoaded = false;
+
+// ── FILE LOADING ───────────────────────────────────────────────────────────
+function parseEntries(text) {
+  return text.split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0)
+    .map(line => {
+      const comma = line.indexOf(',');
+      if (comma === -1) return { name: line, url: null };
+      return {
+        name: line.slice(0, comma).trim(),
+        url:  line.slice(comma + 1).trim()
+      };
+    });
+}
+
+fetch('Lockers.txt')
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.text();
+  })
+  .then(text => {
+    entries = parseEntries(text);
+    fileLoaded = true;
+    const lbl = document.getElementById('fileLabel');
+    lbl.textContent = `✓ Lockers.txt  [${entries.length} ENTRIES]`;
+    lbl.style.color = 'var(--green)';
+    setStatus(`LOADED ${entries.length} ENTRIES`, 'ok');
+    updateBtn();
+  })
+  .catch(err => {
+    const lbl = document.getElementById('fileLabel');
+    lbl.textContent = `✗ Could not load Lockers.txt`;
+    lbl.style.color = 'var(--red)';
+    setStatus(`ERROR: ${err.message} — MAKE SURE Lockers.txt IS IN THE REPO ROOT`, 'err');
+  });
+
+// ── COUNT BUTTONS ──────────────────────────────────────────────────────────
+document.querySelectorAll('.count-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    chosenCount = parseInt(this.dataset.val);
+    updateBtn();
+  });
+});
+// default select 2
+document.querySelector('.count-btn[data-val="2"]').classList.add('active');
+
+function updateBtn() {
+  const btn = document.getElementById('openBtn');
+  if (!fileLoaded) {
+    btn.disabled = true;
+    return;
+  }
+  if (entries.length < chosenCount) {
+    btn.disabled = true;
+    setStatus(`NOT ENOUGH ENTRIES (HAVE ${entries.length}, NEED ${chosenCount})`, 'err');
+    return;
+  }
+  btn.disabled = false;
+  setStatus(`READY — ${entries.length} ENTRIES AVAILABLE`, 'ok');
+}
+
+function setStatus(msg, cls = '') {
+  const el = document.getElementById('statusBar');
+  el.textContent = '// ' + msg;
+  el.className = 'status-bar ' + cls;
+}
+
+// ── RANDOM SAMPLE ─────────────────────────────────────────────────────────
+function sample(arr, n) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
+}
+
+// ── YDKE DECODE ────────────────────────────────────────────────────────────
+function decodeYdke(ydkeUrl) {
+  if (!ydkeUrl || !ydkeUrl.startsWith('ydke://')) return null;
+  const code = ydkeUrl.slice(7);
+  const parts = (code.split('!') + ['','','']).slice(0, 3);
+
+  function decodePart(b64) {
+    if (!b64) return [];
+    const bin = atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
+    const ids = [];
+    for (let i = 0; i + 3 < bin.length; i += 4) {
+      ids.push(
+        bin.charCodeAt(i) |
+        (bin.charCodeAt(i+1) << 8) |
+        (bin.charCodeAt(i+2) << 16) |
+        (bin.charCodeAt(i+3) << 24)
+      );
+    }
+    return ids;
+  }
+
+  return {
+    main:  decodePart(parts[0]),
+    extra: decodePart(parts[1]),
+    side:  decodePart(parts[2])
+  };
+}
+
+// Split ydke parts correctly (the string was not an array)
+function decodeYdkeFix(ydkeUrl) {
+  if (!ydkeUrl || !ydkeUrl.startsWith('ydke://')) return null;
+  const code = ydkeUrl.slice(7);
+  const raw = code.split('!');
+  const parts = [raw[0]||'', raw[1]||'', raw[2]||''];
+
+  function decodePart(b64) {
+    if (!b64) return [];
+    try {
+      const bin = atob(b64);
+      const ids = [];
+      for (let i = 0; i + 3 < bin.length; i += 4) {
+        const id = bin.charCodeAt(i) |
+          (bin.charCodeAt(i+1) << 8) |
+          (bin.charCodeAt(i+2) << 16) |
+          (bin.charCodeAt(i+3) << 24);
+        ids.push(id >>> 0); // unsigned
+      }
+      return ids;
+    } catch(e) { return []; }
+  }
+
+  return {
+    main:  decodePart(parts[0]),
+    extra: decodePart(parts[1]),
+    side:  decodePart(parts[2])
+  };
+}
+
+// ── CARD NAME LOOKUP ───────────────────────────────────────────────────────
+async function fetchCardNames(ids) {
+  if (!ids.length) return {};
+  const unique = [...new Set(ids)];
+  const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${unique.join(',')}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const map = {};
+    (data.data || []).forEach(c => { map[c.id] = c.name; });
+    return map;
+  } catch(e) {
+    return {};
+  }
+}
+
+function countCards(ids) {
+  const map = {};
+  ids.forEach(id => { map[id] = (map[id] || 0) + 1; });
+  return map;
+}
+
+// ── LOCKER ANIMATION ────────────────────────────────────────────────────────
+function buildLockers(n) {
+  const stage = document.getElementById('lockerStage');
+  stage.innerHTML = '';
+  stage.className = 'visible';
+
+  const units = [];
+  for (let i = 0; i < n; i++) {
+    const unit = document.createElement('div');
+    unit.className = 'locker-unit';
+
+    const glow = document.createElement('div');
+    glow.className = 'locker-inner-glow';
+
+    const door = document.createElement('div');
+    door.className = 'locker-door';
+
+    const handle = document.createElement('div');
+    handle.className = 'door-handle';
+    door.appendChild(handle);
+
+    const num = document.createElement('div');
+    num.className = 'locker-num';
+    num.textContent = String(i + 1).padStart(2, '0');
+
+    unit.appendChild(glow);
+    unit.appendChild(door);
+    unit.appendChild(num);
+    stage.appendChild(unit);
+    units.push({ unit, door });
+  }
+  return units;
+}
+
+function openLocker(doorEl, unitEl, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      doorEl.classList.add('open');
+      unitEl.classList.add('open');
+      setTimeout(resolve, 750);
+    }, delay);
+  });
+}
+
+// ── MAIN OPEN ACTION ─────────────────────────────────────────────────────
+document.getElementById('openBtn').addEventListener('click', async function() {
+  if (entries.length < chosenCount) return;
+
+  const btn = this;
+  btn.disabled = true;
+  btn.textContent = '⚙ ACCESSING...';
+
+  const chosen = sample(entries, chosenCount);
+  setStatus(`OPENING ${chosenCount} LOCKER${chosenCount > 1 ? 'S' : ''}...`, 'warn');
+
+  // Build locker animation
+  const lockers = buildLockers(chosenCount);
+
+  // Clear results
+  const resultsEl = document.getElementById('results');
+  resultsEl.innerHTML = '';
+
+  // Open each locker in sequence and reveal card
+  for (let i = 0; i < chosen.length; i++) {
+    const { unit, door } = lockers[i];
+    await openLocker(door, unit, i * 300);
+
+    // Reveal the deck card with a short delay after door opens
+    await new Promise(r => setTimeout(r, 200));
+    const deckEl = createDeckCard(chosen[i], i);
+    resultsEl.appendChild(deckEl);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => deckEl.classList.add('revealed'));
+    });
+
+    // If it's a ydke URL, fetch cards asynchronously
+    if (chosen[i].url && chosen[i].url.startsWith('ydke://')) {
+      loadYdkeCards(deckEl, chosen[i].url);
+    }
+  }
+
+  setStatus(`${chosenCount} LOCKER${chosenCount > 1 ? 'S' : ''} OPENED SUCCESSFULLY`, 'ok');
+  btn.disabled = false;
+  btn.textContent = '⚡ OPEN LOCKERS';
+});
+
+// ── CREATE DECK CARD ELEMENT ──────────────────────────────────────────────
+function createDeckCard(entry, idx) {
+  const card = document.createElement('div');
+  card.className = 'deck-card expanded';
+  card.style.transitionDelay = '0s';
+
+  const isYdke = entry.url && entry.url.startsWith('ydke://');
+  const badgeText = isYdke ? 'YDKe' : (entry.url ? 'LINK' : 'NO URL');
+
+  card.innerHTML = `
+    <div class="deck-card-header">
+      <div class="deck-name">${escapeHtml(entry.name)}</div>
+      <div class="deck-badge">${badgeText}</div>
+      <div class="deck-toggle">▲</div>
+    </div>
+    <div class="deck-body" id="body-${idx}">
+      ${entry.url
+        ? `<div class="deck-url">${isYdke
+            ? `<span style="color:var(--dim)">ydke://...</span><span class="ydke-tag">ENCODED</span>`
+            : `<a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener">${escapeHtml(entry.url)}</a>`
+          }</div>`
+        : ''}
+      ${isYdke
+        ? `<div class="loading-spinner" id="spinner-${idx}">// FETCHING CARD DATA...</div>`
+        : `<div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim);padding:8px 0">// NO YDKe DATA — VISIT LINK ABOVE</div>`
+      }
+    </div>
+  `;
+
+  // Toggle expand
+  card.querySelector('.deck-card-header').addEventListener('click', function() {
+    card.classList.toggle('expanded');
+  });
+
+  return card;
+}
+
+// ── LOAD YDKe CARDS INTO DOM ──────────────────────────────────────────────
+async function loadYdkeCards(cardEl, ydkeUrl) {
+  const decoded = decodeYdkeFix(ydkeUrl);
+  if (!decoded) return;
+
+  const { main, extra, side } = decoded;
+  const allIds = [...main, ...extra, ...side];
+  const names = await fetchCardNames(allIds);
+
+  // Find the body (it's the only one with a spinner)
+  const spinner = cardEl.querySelector('[id^="spinner-"]');
+  if (!spinner) return;
+  const body = spinner.parentElement;
+  spinner.remove();
+
+  function renderSection(label, ids) {
+    if (!ids.length) return '';
+    const counts = countCards(ids);
+    let html = `<div class="section-label">${label} DECK <span style="color:var(--dim);font-size:9px">(${ids.length})</span></div><div class="card-list">`;
+    Object.entries(counts).forEach(([id, qty]) => {
+      const name = names[id] || `Unknown (${id})`;
+      html += `<div class="card-entry"><span class="card-qty">×${qty}</span><span>${escapeHtml(name)}</span></div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  const html = renderSection('MAIN', main) + renderSection('EXTRA', extra) + renderSection('SIDE', side);
+  const div = document.createElement('div');
+  div.innerHTML = html;
+
+  // Keep the url line, append sections
+  body.appendChild(div);
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function closeInfo() {
+  document.getElementById('infoOverlay').classList.remove('open');
+}
+document.getElementById('infoBtn').addEventListener('click', function() {
+  document.getElementById('infoOverlay').classList.add('open');
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeInfo();
+});
+
+</script>
+</body>
+</html>
