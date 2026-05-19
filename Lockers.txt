@@ -101,3 +101,7 @@ RoBo, https://www.duelingbook.com/deck?id=19903404, True
 DragonBallZ, https://www.duelingbook.com/deck?id=19891056, True
 Yubel, https://www.duelingbook.com/deck?id=19937070, True
 AzaMarella, https://www.duelingbook.com/deck?id=19937085, True
+And I Chain, https://www.duelingbook.com/deck?id=19941304, True
+Roll Out!, https://www.duelingbook.com/deck?id=20001235, True
+Winged Dragons, https://www.duelingbook.com/deck?id=20137094, True
+Yellowbrick Spaceship, https://www.duelingbook.com/deck?id=18716066, True
